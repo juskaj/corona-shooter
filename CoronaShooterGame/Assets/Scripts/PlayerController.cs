@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    private GameObject player;
     public int playerSpeed = 5;
     Rigidbody2D rb;
 
@@ -18,7 +17,6 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        player = this.gameObject;
         rb = this.gameObject.GetComponent<Rigidbody2D>();
     }
 
@@ -30,7 +28,6 @@ public class PlayerController : MonoBehaviour
         direction.Normalize();
 
         currentVector = Vector2.SmoothDamp(currentVector, direction, ref currentVelocity, speedSmoothness);
-
         rb.velocity = currentVector * 100 * playerSpeed * Time.deltaTime;
 
         if (Input.GetKeyDown(KeyCode.Space))
@@ -39,5 +36,19 @@ public class PlayerController : MonoBehaviour
             projectileObject.GetComponent<ProjectileController>().setProjectileSpeed(projectileSpeed, transform);
 
         }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "Enemy")
+        {
+            OnHit();
+        }
+    }
+
+    private void OnHit(int damage = 0) //Damage model may be implemented
+    {
+        GameController.GM.OnPlayerDeath();
+        Destroy(this.gameObject);
     }
 }
