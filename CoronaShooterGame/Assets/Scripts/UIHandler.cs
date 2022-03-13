@@ -16,27 +16,30 @@ public class UIHandler : MonoBehaviour
         }
 
         UI = this;
+
+        scoreText = ScoreTextGameObject.GetComponent<TMP_Text>();
+        gameOverText = GameOverTextGameObject.GetComponent<TMP_Text>();
+        waveText = WaveTextGameObject.GetComponent<TMP_Text>();
+        scoreText.text = "Score: 0";
+        GameOverTextGameObject.SetActive(false);
     }
 
     public GameObject ScoreTextGameObject;
     private TMP_Text scoreText;
     public GameObject GameOverTextGameObject;
     private TMP_Text gameOverText;
+    public GameObject WaveTextGameObject;
+    private TMP_Text waveText;
 
-    // Start is called before the first frame update
     void Start()
     {
-        scoreText = ScoreTextGameObject.GetComponent<TMP_Text>();
-        gameOverText = GameOverTextGameObject.GetComponent<TMP_Text>();
-        scoreText.text = "Score: 0";
-        GameOverTextGameObject.SetActive(false);
+
     }
 
     public void SetGameOverScreen(int score)
     {
         gameOverText.text = string.Format("Game Over!\nYour score: {0}\nPress space to restart", score);
         GameOverTextGameObject.SetActive(true);
-        Debug.Log("GG");
     }
 
     public void SetScore(int score)
@@ -44,9 +47,8 @@ public class UIHandler : MonoBehaviour
         scoreText.text = string.Format("Score: {0}", score.ToString());
     }
 
-    // Update is called once per frame
-    void Update()
+    public void SetWaveText(string waveText)
     {
-        
+        this.waveText.text = waveText;
     }
 }

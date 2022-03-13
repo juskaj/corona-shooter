@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<level>
+	<name>Level 1</name>
+	<wave>
+		<waveName>Wave: 1</waveName>
+		<wavePic>firstLevel.png</wavePic>
+	</wave>
+	<wave>
+		<waveName>Wave: 2</waveName>
+		<wavePic>secondLevel.png</wavePic>
+	</wave>
+	<wave>
+		<waveName>Boss</waveName>
+		<wavePic>boss.png</wavePic>
+	</wave>
+</level>
