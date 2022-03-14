@@ -26,12 +26,14 @@ public class GameController : MonoBehaviour
     //Public variables
     public float gameSpeed = 1f;
     public GameObject Enemy;
-    public GameObject EnemyField;
+    public GameObject Background;
     public GameObject[] Walls;
     public GameObject Player;
     public GameObject ChasingField;
 
     //Private variables
+    private Queue<GameObject> backgrounds;
+    private GameObject lastBackground;
     private bool gameIsActive;
     private int score;
     private int enemyCount;
@@ -52,6 +54,7 @@ public class GameController : MonoBehaviour
             return;
         }
 
+        backgrounds = new Queue<GameObject>();
         StartLevel(levels.Current);
         gameIsActive = true;
         score = 0;
@@ -117,16 +120,41 @@ public class GameController : MonoBehaviour
 
             return;
         }
+    }
 
-        EnemyField.transform.Translate(new Vector3(0, -1 * gameSpeed * Time.deltaTime, 0));
+    private void FixedUpdate()
+    {
+        MoveFields();
+    }
+
+    /// <summary>
+    /// Moves background and chasing field
+    /// </summary>
+    private void MoveFields()
+    {
+        Background.transform.Translate(new Vector3(0, -1 * gameSpeed * Time.deltaTime, 0));
         ChasingField.transform.Translate(new Vector3(0, 1 * gameSpeed * 0.7f * Time.deltaTime, 0));
-        foreach(GameObject wall in Walls)
+        foreach (GameObject wall in Walls)
         {
             wall.transform.position = new Vector3(
                 wall.transform.position.x,
                 Player.transform.position.y,
                 wall.transform.position.z
                 );
+        }
+
+        if (lastBackground.transform.position.y < Player.transform.position.y)
+        {
+            GameObject createdBackground = Instantiate(Background,
+                                            new Vector3(0, lastBackground.transform.position.y + 32f, 0),
+                                            Quaternion.identity);
+            backgrounds.Enqueue(createdBackground);
+            lastBackground = createdBackground;
+
+            if (backgrounds.Count > 3)
+            {
+                Destroy(backgrounds.Dequeue());
+            }
         }
     }
 
@@ -174,12 +202,31 @@ public class GameController : MonoBehaviour
     }
 
     /// <summary>
+    /// Loads level background
+    /// </summary>
+    /// <param name="level">Level to load background for</param>
+    private void LoadBackground(XElement level)
+    {
+        XElement levelBackground = level.Element("levelBackground");
+        Sprite backgroundSprite = Resources.Load<Sprite>(string.Format("Backgrounds/{0}", 
+                                                        levelBackground.Value.Substring(0, levelBackground.Value.LastIndexOf('.'))));
+        Background.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = backgroundSprite;
+
+        backgrounds.Clear();
+        GameObject spawnedBg = Instantiate(Background, Vector3.zero, Quaternion.identity);
+        backgrounds.Enqueue(spawnedBg);
+        lastBackground = spawnedBg;
+
+    }
+
+    /// <summary>
     /// Starts game level
     /// </summary>
     /// <param name="level">Level to start</param>
     private void StartLevel(XElement level)
     {
-        LoadWaves(levels.Current);
+        LoadBackground(level);
+        LoadWaves(level);
         UIHandler.UI.SetWaveText(waveNames[currentWave]);
         readSpawnImage(wavePictures[currentWave]);
     }
