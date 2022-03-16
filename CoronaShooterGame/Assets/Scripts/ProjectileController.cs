@@ -19,9 +19,7 @@ public class ProjectileController : MonoBehaviour
     {
         if (collision.gameObject.tag == "Enemy")
         {
-            EnemyController enemy = collision.GetComponent<EnemyController>();
-            enemy.OnProjectileHit();
-            Destroy(gameObject);
+            GameController.GM.OnProjectileHitEnemy(gameObject, collision);
         }
     }
 

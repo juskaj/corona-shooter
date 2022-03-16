@@ -20,6 +20,7 @@ public class UIHandler : MonoBehaviour
         scoreText = ScoreTextGameObject.GetComponent<TMP_Text>();
         gameOverText = GameOverTextGameObject.GetComponent<TMP_Text>();
         waveText = WaveTextGameObject.GetComponent<TMP_Text>();
+        livesText = LivesTextGameObject.GetComponent<TMP_Text>();
         scoreText.text = "Score: 0";
         GameOverTextGameObject.SetActive(false);
     }
@@ -30,11 +31,14 @@ public class UIHandler : MonoBehaviour
     private TMP_Text gameOverText;
     public GameObject WaveTextGameObject;
     private TMP_Text waveText;
+    public GameObject LivesTextGameObject;
+    private TMP_Text livesText;
 
     void Start()
     {
 
     }
+
 
     public void SetGameOverScreen(int score)
     {
@@ -50,5 +54,10 @@ public class UIHandler : MonoBehaviour
     public void SetWaveText(string waveText)
     {
         this.waveText.text = waveText;
+    }
+
+    public void SetLives(int lives)
+    {
+        livesText.text = string.Format("Lives: {0}", lives.ToString());
     }
 }

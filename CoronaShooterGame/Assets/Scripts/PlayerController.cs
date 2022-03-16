@@ -42,13 +42,11 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.gameObject.tag == "Enemy")
         {
-            OnHit();
+            GameController.GM.OnPlayerHit(collision);
         }
-    }
-
-    private void OnHit(int damage = 0) //Damage model may be implemented
-    {
-        GameController.GM.OnPlayerDeath();
-        Destroy(this.gameObject);
+        if (collision.gameObject.tag == "Border")
+        {
+            GameController.GM.OnPlayerDeath();
+        }
     }
 }

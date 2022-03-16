@@ -32,6 +32,8 @@ public class GameController : MonoBehaviour
     public GameObject ChasingField;
 
     //Private variables
+    private int currentPlayerlives;
+    private int maxPlayerLives;
     private Queue<GameObject> backgrounds;
     private GameObject lastBackground;
     private bool gameIsActive;
@@ -44,9 +46,11 @@ public class GameController : MonoBehaviour
 
     void Start()
     {
+        maxPlayerLives = 3;
+        currentPlayerlives = maxPlayerLives;
         enemyCount = 0;
         currentWave = 0;
-
+        UIHandler.UI.SetLives(currentPlayerlives);
         levels = LoadLevels().GetEnumerator();
 
         if (!levels.MoveNext())
@@ -105,6 +109,8 @@ public class GameController : MonoBehaviour
     /// </summary>
     public void OnPlayerDeath()
     {
+        UIHandler.UI.SetLives(0);
+        Player.gameObject.SetActive(false);
         UIHandler.UI.SetGameOverScreen(score);
         gameIsActive = false;
     }
@@ -244,6 +250,37 @@ public class GameController : MonoBehaviour
         }
         UIHandler.UI.SetWaveText(waveNames[currentWave]);
         readSpawnImage(wavePictures[currentWave]);
+    }
+
+    public void OnPlayerHit(Collider2D collision)
+    {
+        ReducePlayerLifes(1);
+        Destroy(collision.gameObject);
+    }
+
+    public void OnProjectileHitEnemy(GameObject projectile, Collider2D collision)
+    {
+        Destroy(projectile.gameObject);
+        Destroy(collision.gameObject);
+        AddScore(20);
+        ReduceEnemyCount();
+    }
+
+    public void OnEnemyHitBorder(GameObject enemy)
+    {
+        Destroy(enemy);
+        ReducePlayerLifes(1);
+    }
+
+    private void ReducePlayerLifes(int amount)
+    {
+        currentPlayerlives -= amount;
+        UIHandler.UI.SetLives(currentPlayerlives);
+
+        if (currentPlayerlives <= 0)
+        {
+            OnPlayerDeath();
+        }
     }
 
     /// <summary>
