@@ -11,7 +11,20 @@
 		<wavePic>secondLevel.png</wavePic>
 	</wave>
 	<wave>
+		<waveName>Wave: 3</waveName>
+		<wavePic>thirdWave_firstLevel.png</wavePic>
+	</wave>
+	<wave>
+		<waveName>Wave: 4</waveName>
+		<wavePic>fourthWave_firstLevel.png</wavePic>
+	</wave>
+	<wave>
+		<waveName>Wave: 5</waveName>
+		<wavePic>fifthWave_firstLevel.png</wavePic>
+	</wave>
+	<wave>
 		<waveName>Boss</waveName>
 		<wavePic>boss.png</wavePic>
 	</wave>
+
 </level>

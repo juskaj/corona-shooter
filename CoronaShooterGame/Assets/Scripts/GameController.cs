@@ -255,6 +255,7 @@ public class GameController : MonoBehaviour
     public void OnPlayerHit(Collider2D collision)
     {
         ReducePlayerLifes(1);
+		ReduceEnemyCount();
         Destroy(collision.gameObject);
     }
 
@@ -268,6 +269,7 @@ public class GameController : MonoBehaviour
 
     public void OnEnemyHitBorder(GameObject enemy)
     {
+		ReduceEnemyCount();
         Destroy(enemy);
         ReducePlayerLifes(1);
     }
