@@ -32,6 +32,7 @@ public class GameController : MonoBehaviour
     public GameObject ChasingField;
 
     //Private variables
+    private AudioController audioController;
     private int currentPlayerlives;
     private int maxPlayerLives;
     private Queue<GameObject> backgrounds;
@@ -58,6 +59,8 @@ public class GameController : MonoBehaviour
             return;
         }
 
+        audioController = GetComponent<AudioController>();
+        audioController.PlaySound("Level 1 Soundtrack");
         backgrounds = new Queue<GameObject>();
         StartLevel(levels.Current);
         gameIsActive = true;
@@ -110,6 +113,7 @@ public class GameController : MonoBehaviour
     public void OnPlayerDeath()
     {
         UIHandler.UI.SetLives(0);
+        audioController.StopSound("Level 1 Soundtrack");
         Player.gameObject.SetActive(false);
         UIHandler.UI.SetGameOverScreen(score);
         gameIsActive = false;
@@ -255,23 +259,27 @@ public class GameController : MonoBehaviour
     public void OnPlayerHit(Collider2D collision)
     {
         ReducePlayerLifes(1);
-		ReduceEnemyCount();
-        Destroy(collision.gameObject);
+        DestroyEnemy(collision.gameObject);
     }
 
     public void OnProjectileHitEnemy(GameObject projectile, Collider2D collision)
     {
         Destroy(projectile.gameObject);
-        Destroy(collision.gameObject);
+        DestroyEnemy(collision.gameObject);
         AddScore(20);
-        ReduceEnemyCount();
     }
 
     public void OnEnemyHitBorder(GameObject enemy)
     {
-		ReduceEnemyCount();
-        Destroy(enemy);
+        DestroyEnemy(enemy);
         ReducePlayerLifes(1);
+    }
+
+    private void DestroyEnemy(GameObject enemy)
+    {
+        ReduceEnemyCount();
+        Destroy(enemy);
+        audioController.PlaySound("Enemy Death");
     }
 
     private void ReducePlayerLifes(int amount)
