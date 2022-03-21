@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class UIHandler : MonoBehaviour
@@ -20,7 +21,6 @@ public class UIHandler : MonoBehaviour
         scoreText = ScoreTextGameObject.GetComponent<TMP_Text>();
         gameOverText = GameOverTextGameObject.GetComponent<TMP_Text>();
         waveText = WaveTextGameObject.GetComponent<TMP_Text>();
-        livesText = LivesTextGameObject.GetComponent<TMP_Text>();
         scoreText.text = "Score: 0";
         GameOverTextGameObject.SetActive(false);
     }
@@ -31,8 +31,8 @@ public class UIHandler : MonoBehaviour
     private TMP_Text gameOverText;
     public GameObject WaveTextGameObject;
     private TMP_Text waveText;
-    public GameObject LivesTextGameObject;
-    private TMP_Text livesText;
+    public GameObject PlayerLivesPanel;
+    public GameObject PlayerLife;
 
     void Start()
     {
@@ -56,8 +56,21 @@ public class UIHandler : MonoBehaviour
         this.waveText.text = waveText;
     }
 
-    public void SetLives(int lives)
+    public List<GameObject> AddPlayerLifes(int amount, Texture2D lifeTexture)
     {
-        livesText.text = string.Format("Lives: {0}", lives.ToString());
+        List<GameObject> lifes = new List<GameObject>();
+        for (int i = 0; i < amount; i++)
+        {
+            GameObject l = Instantiate(PlayerLife, PlayerLivesPanel.transform, false);
+            l.GetComponent<RawImage>().texture = lifeTexture;
+            lifes.Add(l);
+        }
+
+        return lifes;
     }
+
+    public void SetPlayerLifeLoss(GameObject life, Texture2D lostLifeTexture)
+    {
+        life.GetComponent<RawImage>().texture = lostLifeTexture;
+    }  
 }

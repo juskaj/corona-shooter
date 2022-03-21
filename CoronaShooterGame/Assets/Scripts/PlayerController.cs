@@ -33,6 +33,7 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             GameObject projectileObject = Instantiate(projectile);
+            GameController.GM.audioController.PlaySound("Shooting sound");
             projectileObject.GetComponent<ProjectileController>().setProjectileSpeed(projectileSpeed, transform);
 
         }

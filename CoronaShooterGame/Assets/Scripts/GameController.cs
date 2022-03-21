@@ -1,11 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.IO;
-using Cinemachine;
-using System.Xml;
-using System.Xml.Serialization;
 using System.Xml.Linq;
 
 public class GameController : MonoBehaviour
@@ -30,9 +25,12 @@ public class GameController : MonoBehaviour
     public GameObject[] Walls;
     public GameObject Player;
     public GameObject ChasingField;
+    public Texture2D PlayerLife;
+    public Texture2D PlayerLifeLost;
+    [HideInInspector]
+    public AudioController audioController;
 
     //Private variables
-    private AudioController audioController;
     private int currentPlayerlives;
     private int maxPlayerLives;
     private Queue<GameObject> backgrounds;
@@ -44,6 +42,7 @@ public class GameController : MonoBehaviour
     private List<Texture2D> wavePictures;
     private List<string> waveNames;
     private IEnumerator<XElement> levels;
+    private List<GameObject> playerLifes;
 
     void Start()
     {
@@ -51,7 +50,7 @@ public class GameController : MonoBehaviour
         currentPlayerlives = maxPlayerLives;
         enemyCount = 0;
         currentWave = 0;
-        UIHandler.UI.SetLives(currentPlayerlives);
+        playerLifes = UIHandler.UI.AddPlayerLifes(currentPlayerlives, PlayerLife);
         levels = LoadLevels().GetEnumerator();
 
         if (!levels.MoveNext())
@@ -112,7 +111,10 @@ public class GameController : MonoBehaviour
     /// </summary>
     public void OnPlayerDeath()
     {
-        UIHandler.UI.SetLives(0);
+        foreach (GameObject life in playerLifes)
+        {
+            UIHandler.UI.SetPlayerLifeLoss(life, PlayerLifeLost);
+        }
         audioController.StopSound("Level 1 Soundtrack");
         Player.gameObject.SetActive(false);
         UIHandler.UI.SetGameOverScreen(score);
@@ -285,7 +287,7 @@ public class GameController : MonoBehaviour
     private void ReducePlayerLifes(int amount)
     {
         currentPlayerlives -= amount;
-        UIHandler.UI.SetLives(currentPlayerlives);
+        UIHandler.UI.SetPlayerLifeLoss(playerLifes[currentPlayerlives], PlayerLifeLost);
 
         if (currentPlayerlives <= 0)
         {
