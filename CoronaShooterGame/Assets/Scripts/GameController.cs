@@ -111,11 +111,12 @@ public class GameController : MonoBehaviour
     /// </summary>
     public void OnPlayerDeath()
     {
+        audioController.StopSound("Level 1 Soundtrack");
+        audioController.PlaySound("Player death");
         foreach (GameObject life in playerLifes)
         {
             UIHandler.UI.SetPlayerLifeLoss(life, PlayerLifeLost);
         }
-        audioController.StopSound("Level 1 Soundtrack");
         Player.gameObject.SetActive(false);
         UIHandler.UI.SetGameOverScreen(score);
         gameIsActive = false;
@@ -279,9 +280,9 @@ public class GameController : MonoBehaviour
 
     private void DestroyEnemy(GameObject enemy)
     {
+        audioController.PlaySound("Enemy Death");
         ReduceEnemyCount();
         Destroy(enemy);
-        audioController.PlaySound("Enemy Death");
     }
 
     private void ReducePlayerLifes(int amount)
