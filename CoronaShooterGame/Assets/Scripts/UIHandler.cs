@@ -22,9 +22,18 @@ public class UIHandler : MonoBehaviour
         gameOverText = GameOverTextGameObject.GetComponent<TMP_Text>();
         waveText = WaveTextGameObject.GetComponent<TMP_Text>();
         scoreText.text = "Score: 0";
+        MainMenuUI.SetActive(true);
         GameOverTextGameObject.SetActive(false);
+        GameUI.SetActive(false);
+        LevelSelectorUI.SetActive(false);
     }
 
+    public GameObject LevelSelectorUI;
+    public GameObject LevelSelectorLevel;
+    public GameObject TitleUI;
+
+    public GameObject MainMenuUI;
+    public GameObject GameUI;
     public GameObject ScoreTextGameObject;
     private TMP_Text scoreText;
     public GameObject GameOverTextGameObject;
@@ -36,9 +45,45 @@ public class UIHandler : MonoBehaviour
 
     void Start()
     {
-
     }
 
+    public void QuitGame()
+    {
+        Application.Quit();
+    }
+
+    public void OpenLevelSelectorUI()
+    {
+        GameUI.SetActive(false);
+        TitleUI.SetActive(false);
+        LevelSelectorUI.SetActive(true);
+    }
+
+    public void OpenMainMenuTitleUI()
+    {
+        GameUI.SetActive(false);
+        TitleUI.SetActive(true);
+        LevelSelectorUI.SetActive(false);
+    }
+
+    void OnLevelSelectorClick(int index)
+    {
+        GameController.GM.StartLevel(index);
+    }
+
+    public void AddLevelToSelector(Level level, int index)
+    {
+        GameObject sLevel = Instantiate(LevelSelectorLevel, LevelSelectorUI.transform.GetChild(0));
+        sLevel.GetComponent<Button>().onClick.AddListener(delegate { OnLevelSelectorClick(index); });
+        sLevel.transform.GetChild(0).GetChild(0).GetComponent<RawImage>().texture = level.BackgroundSprite.texture;
+        sLevel.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = level.Name;
+    }
+
+    public void StartGame()
+    {
+        MainMenuUI.SetActive(false);
+        GameUI.SetActive(true);
+    }
 
     public void SetGameOverScreen(int score)
     {

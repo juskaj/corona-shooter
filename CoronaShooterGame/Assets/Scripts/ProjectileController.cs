@@ -8,6 +8,10 @@ public class ProjectileController : MonoBehaviour
 
     void Update()
     {
+        if (!GameController.GM.isGameActive)
+        {
+            return;
+        }
         gameObject.transform.Translate(0, Vector2.up.y * Time.deltaTime * speed, 0);
         if (transform.position.y > 500)
         {

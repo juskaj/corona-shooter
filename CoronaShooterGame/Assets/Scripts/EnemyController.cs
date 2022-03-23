@@ -13,6 +13,10 @@ public class EnemyController : MonoBehaviour
 
     private void Update()
     {
+        if (!GameController.GM.isGameActive)
+        {
+            return;
+        }
         transform.Translate(new Vector3(0, -1 * Speed * Time.deltaTime, 0));
     }
 

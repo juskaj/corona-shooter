@@ -22,6 +22,11 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (!GameController.GM.isGameActive)
+        {
+            return;
+        }
+
         float hozirontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
         Vector2 direction = new Vector2(hozirontal, vertical);

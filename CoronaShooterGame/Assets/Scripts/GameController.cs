@@ -19,6 +19,7 @@ public class GameController : MonoBehaviour
     }
 
     //Public variables
+    public Boss[] AllBosses;
     public float gameSpeed = 1f;
     public GameObject Enemy;
     public GameObject Background;
@@ -29,40 +30,43 @@ public class GameController : MonoBehaviour
     public Texture2D PlayerLifeLost;
     [HideInInspector]
     public AudioController audioController;
+    public GameObject BossPrefab;
 
     //Private variables
     private int currentPlayerlives;
     private int maxPlayerLives;
     private Queue<GameObject> backgrounds;
-    private GameObject lastBackground;
+    private Vector2 lastBackground;
     private bool gameIsActive;
     private int score;
     private int enemyCount;
-    private int currentWave;
-    private List<Texture2D> wavePictures;
-    private List<string> waveNames;
-    private IEnumerator<XElement> levels;
+    private List<Level> levels;
     private List<GameObject> playerLifes;
+    private int selectedLevelIndex;
+
+    public bool isGameActive
+    {
+        get { return gameIsActive; }
+    }
 
     void Start()
-    {
-        maxPlayerLives = 3;
-        currentPlayerlives = maxPlayerLives;
-        enemyCount = 0;
-        currentWave = 0;
-        playerLifes = UIHandler.UI.AddPlayerLifes(currentPlayerlives, PlayerLife);
-        levels = LoadLevels().GetEnumerator();
+    {   
+        gameIsActive = false;
+        levels = LoadLevels();
 
-        if (!levels.MoveNext())
+        if (levels.Count <= 0)
         {
             return;
         }
+        maxPlayerLives = 3;
+        currentPlayerlives = maxPlayerLives;
+        enemyCount = 0;
+        playerLifes = UIHandler.UI.AddPlayerLifes(currentPlayerlives, PlayerLife);
+
+        selectedLevelIndex = 0;
 
         audioController = GetComponent<AudioController>();
-        audioController.PlaySound("Level 1 Soundtrack");
         backgrounds = new Queue<GameObject>();
-        StartLevel(levels.Current);
-        gameIsActive = true;
         score = 0;
     }
 
@@ -105,13 +109,12 @@ public class GameController : MonoBehaviour
         UIHandler.UI.SetScore(score);
     }
 
-
     /// <summary>
     /// Actions to take when player dies
     /// </summary>
     public void OnPlayerDeath()
     {
-        audioController.StopSound("Level 1 Soundtrack");
+        audioController.StopAllSounds();
         audioController.PlaySound("Player death");
         foreach (GameObject life in playerLifes)
         {
@@ -133,10 +136,7 @@ public class GameController : MonoBehaviour
 
             return;
         }
-    }
 
-    private void FixedUpdate()
-    {
         MoveFields();
     }
 
@@ -156,13 +156,13 @@ public class GameController : MonoBehaviour
                 );
         }
 
-        if (lastBackground.transform.position.y < Player.transform.position.y)
+        if (lastBackground.y < Player.transform.position.y)
         {
             GameObject createdBackground = Instantiate(Background,
-                                            new Vector3(0, lastBackground.transform.position.y + 32f, 0),
+                                            new Vector3(0, lastBackground.y + 32f, 0),
                                             Quaternion.identity);
             backgrounds.Enqueue(createdBackground);
-            lastBackground = createdBackground;
+            lastBackground = createdBackground.transform.position;
 
             if (backgrounds.Count > 3)
             {
@@ -175,60 +175,100 @@ public class GameController : MonoBehaviour
     /// Loads game levels
     /// </summary>
     /// <returns>Enumerable XML elements with information about levels</returns>
-    private IEnumerable<XElement> LoadLevels()
+    private List<Level> LoadLevels()
     {
+        List<Level> levels = new List<Level>();
         TextAsset xmlDocTxt = Resources.Load<TextAsset>("Levels/levels");
         XDocument doc = XDocument.Parse(xmlDocTxt.text);
-        return doc.Elements("level");
+        XElement levelsDocXML = doc.Element("levels");
+        IEnumerable<XElement> levelsXML = levelsDocXML.Elements("level");
+
+        foreach (XElement level in levelsXML)
+        {
+            levels.Add(LoadLevel(level, levels.Count));
+        }
+        return levels;
+    }
+
+    private Level LoadLevel(XElement levelXML, int index)
+    {
+        string levelName = levelXML.Element("name").Value;
+        IEnumerable<XElement> levelWaves = levelXML.Elements("wave");
+        List<Wave> waves = LoadWaves(levelWaves);
+        XElement bossWaveXML = levelXML.Element("bossWave");
+        BossWave bossWave = LoadBossWave(bossWaveXML);
+        Sprite backgroundSprite = LoadLevelBackground(levelXML);
+
+        Level level = new Level(levelName, waves, bossWave, backgroundSprite, LoadLevelSound(levelXML));
+        UIHandler.UI.AddLevelToSelector(level, index);
+
+        return level;
     }
 
     /// <summary>
     /// Loads waves from level
     /// </summary>
     /// <param name="level">Level to load waves from</param>
-    private void LoadWaves(XElement level)
+    private List<Wave> LoadWaves(IEnumerable<XElement> levelWavesXML)
     {
-        wavePictures = new List<Texture2D>();
-        waveNames = new List<string>();
-
-        XElement levelName = level.Element("name");
-        IEnumerable<XElement> waves = level.Elements("wave");
-
-        foreach (XElement wave in waves)
+        List<Wave> waves = new List<Wave>();
+        foreach (XElement wave in levelWavesXML)
         {
+            Texture2D texture = LoadTextureFromResources(wave, "wavePic");
 
-            XElement waveName = wave.Element("waveName");
-            waveNames.Add(waveName.Value);
-
-            XElement wavePic = wave.Element("wavePic");
-            string wavePicture = wavePic.Value.Substring(0, wavePic.Value.LastIndexOf('.'));
-            Sprite waveSprites = Resources.Load<Sprite>(string.Format("Images/{0}", wavePicture));
-            Texture2D texture = new Texture2D((int)waveSprites.rect.width, (int)waveSprites.rect.height);
-            var pixels = waveSprites.texture.GetPixels((int)waveSprites.textureRect.x,
-                                                            (int)waveSprites.textureRect.y,
-                                                            (int)waveSprites.textureRect.width,
-                                                            (int)waveSprites.textureRect.height);
-            texture.SetPixels(pixels);
-            texture.Apply();
-            wavePictures.Add(texture);
+            waves.Add(new Wave(wave.Element("waveName").Value, texture));
         }
+
+        return waves;
+    }
+
+    private BossWave LoadBossWave(XElement bossWaveXML)
+    {
+        return new BossWave(bossWaveXML.Element("waveName").Value,
+            LoadTextureFromResources(bossWaveXML, "wavePic"),
+            bossWaveXML.Element("bossName").Value, bossWaveXML.Element("bossSound").Value);
+    }
+
+    private string LoadLevelSound(XElement levelXML)
+    {
+        return levelXML.Element("sound").Value;
+    }
+
+    private Sprite LoadLevelBackground(XElement levelXML)
+    {
+        XElement levelBackground = levelXML.Element("levelBackground");
+        return Resources.Load<Sprite>(string.Format("Backgrounds/{0}",
+                                                        levelBackground.Value.Substring(0, levelBackground.Value.LastIndexOf('.'))));
+    }
+
+    private Texture2D LoadTextureFromResources(XElement element, string textureName)
+    {
+        XElement wavePic = element.Element(textureName);
+        string wavePicture = wavePic.Value.Substring(0, wavePic.Value.LastIndexOf('.'));
+        Sprite waveSprites = Resources.Load<Sprite>(string.Format("Images/{0}", wavePicture));
+        Texture2D texture = new Texture2D((int)waveSprites.rect.width, (int)waveSprites.rect.height);
+        var pixels = waveSprites.texture.GetPixels((int)waveSprites.textureRect.x,
+                                                        (int)waveSprites.textureRect.y,
+                                                        (int)waveSprites.textureRect.width,
+                                                        (int)waveSprites.textureRect.height);
+        texture.SetPixels(pixels);
+        texture.Apply();
+
+        return texture;
     }
 
     /// <summary>
     /// Loads level background
     /// </summary>
     /// <param name="level">Level to load background for</param>
-    private void LoadBackground(XElement level)
+    private void LoadBackgroundSprite(Sprite backgroundSprite)
     {
-        XElement levelBackground = level.Element("levelBackground");
-        Sprite backgroundSprite = Resources.Load<Sprite>(string.Format("Backgrounds/{0}", 
-                                                        levelBackground.Value.Substring(0, levelBackground.Value.LastIndexOf('.'))));
         Background.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = backgroundSprite;
 
         backgrounds.Clear();
         GameObject spawnedBg = Instantiate(Background, Vector3.zero, Quaternion.identity);
         backgrounds.Enqueue(spawnedBg);
-        lastBackground = spawnedBg;
+        lastBackground = spawnedBg.transform.position;
 
     }
 
@@ -236,27 +276,31 @@ public class GameController : MonoBehaviour
     /// Starts game level
     /// </summary>
     /// <param name="level">Level to start</param>
-    private void StartLevel(XElement level)
+    public void StartLevel(int index)
     {
-        LoadBackground(level);
-        LoadWaves(level);
-        UIHandler.UI.SetWaveText(waveNames[currentWave]);
-        readSpawnImage(wavePictures[currentWave]);
+        Level level = levels[index];
+        LoadBackgroundSprite(level.BackgroundSprite);
+        audioController.PlaySound(level.LevelSoundtrack);
+        gameIsActive = true;
+        UIHandler.UI.StartGame();
+        StartWave();
     }
 
     /// <summary>
     /// Sets wave
     /// </summary>
-    private void setWave()
+    private void StartWave()
     {
-        if (wavePictures.Count < currentWave + 1)
+        Level level = levels[selectedLevelIndex];
+        Wave wave = level.NextWave();
+        if (wave is BossWave)
         {
-            Debug.Log("Level End");
-            //TODO: Add level changing system
-            return;
+            BossWave bossWave = wave as BossWave;
+            audioController.StopSound(level.LevelSoundtrack);
+            audioController.PlaySound(bossWave.BossSoundtrack);
         }
-        UIHandler.UI.SetWaveText(waveNames[currentWave]);
-        readSpawnImage(wavePictures[currentWave]);
+        UIHandler.UI.SetWaveText(wave.WaveName);
+        readSpawnImage(wave.WavePicture);
     }
 
     public void OnPlayerHit(Collider2D collision)
@@ -304,8 +348,7 @@ public class GameController : MonoBehaviour
         enemyCount--;
         if (enemyCount <= 0)
         {
-            currentWave++;
-            setWave();
+            StartWave();
         }
     }
 }

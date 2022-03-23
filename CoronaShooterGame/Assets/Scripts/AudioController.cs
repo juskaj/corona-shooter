@@ -19,6 +19,14 @@ public class AudioController : MonoBehaviour
         }
     }
 
+    public void StopAllSounds()
+    {
+        foreach (Sound sound in Sounds)
+        {
+            sound.Source.Stop();
+        }
+    }
+
     public void PlaySound(string name)
     {
         Sound sound = FindSound(name);
