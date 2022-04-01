@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour
 {
-    private float Speed = 0f;
+    private float speed = 0f;
+    public float Health;
 
-    public void setSpeed(float speed)
+    public void SetupEnemy(float speed, float health)
     {
-        Speed = speed;
+        this.speed = speed;
+        Health = health;
     }
 
     private void Update()
@@ -17,7 +19,7 @@ public class EnemyController : MonoBehaviour
         {
             return;
         }
-        transform.Translate(new Vector3(0, -1 * Speed * Time.deltaTime, 0));
+        transform.Translate(new Vector3(0, -1 * speed * Time.deltaTime, 0));
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

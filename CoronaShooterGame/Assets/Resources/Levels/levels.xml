@@ -8,6 +8,21 @@
 			<waveName>Wave: 1</waveName>
 			<wavePic>wave_1_1.png</wavePic>
 		</wave>
+		<bossWave>
+			<waveName>Bossas</waveName>
+			<wavePic>wave_1_boss.png</wavePic>
+			<bossName>Bossas1</bossName>
+			<bossSound>Boss soundtrack</bossSound>
+		</bossWave>
+	</level>
+	<level>
+		<name>Level 2</name>
+		<levelBackground>background_2.png</levelBackground>
+		<sound>Level 1 Soundtrack</sound>
+		<wave>
+			<waveName>Wave: 1</waveName>
+			<wavePic>wave_1_1.png</wavePic>
+		</wave>
 		<wave>
 			<waveName>Wave: 2</waveName>
 			<wavePic>wave_1_2.png</wavePic>
@@ -32,8 +47,8 @@
 		</bossWave>
 	</level>
 	<level>
-		<name>Level 2</name>
-		<levelBackground>background_2.png</levelBackground>
+		<name>Level 3</name>
+		<levelBackground>background_3.png</levelBackground>
 		<sound>Level 1 Soundtrack</sound>
 		<wave>
 			<waveName>Wave: 1</waveName>

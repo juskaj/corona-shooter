@@ -27,6 +27,21 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            GameObject projectileObject = Instantiate(projectile);
+            GameController.GM.audioController.PlaySound("Shooting sound");
+            projectileObject.GetComponent<ProjectileController>().setProjectileSpeed(projectileSpeed, transform);
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        if (!GameController.GM.isGameActive)
+        {
+            return;
+        }
+
         float hozirontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
         Vector2 direction = new Vector2(hozirontal, vertical);
@@ -34,14 +49,11 @@ public class PlayerController : MonoBehaviour
 
         currentVector = Vector2.SmoothDamp(currentVector, direction, ref currentVelocity, speedSmoothness);
         rb.velocity = currentVector * 100 * playerSpeed * Time.deltaTime;
+    }
 
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            GameObject projectileObject = Instantiate(projectile);
-            GameController.GM.audioController.PlaySound("Shooting sound");
-            projectileObject.GetComponent<ProjectileController>().setProjectileSpeed(projectileSpeed, transform);
-
-        }
+    public void StopPlayer()
+    {
+        rb.velocity = Vector2.zero;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

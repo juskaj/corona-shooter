@@ -10,11 +10,12 @@ public class Level
     public BossWave BossWave;
     public Sprite BackgroundSprite;
     public string LevelSoundtrack;
+    public bool Playable;
+    public int highScore;
 
-    private int highScore;
     private int currentWave;
 
-    public Level(string name, List<Wave> waves, BossWave bossWave, Sprite backgroundSprite, string soundTrackName)
+    public Level(string name, List<Wave> waves, BossWave bossWave, Sprite backgroundSprite, string soundTrackName, bool playable)
     {
         Name = name;
         Waves = waves;
@@ -23,6 +24,7 @@ public class Level
         LevelSoundtrack = soundTrackName;
         currentWave = 0;
         highScore = 0;
+        Playable = playable;
     }
 
     public void ResetWaves()
@@ -30,12 +32,16 @@ public class Level
         currentWave = 0;
     }
 
+    public bool IsBossWave()
+    {
+        return currentWave - 1 >= Waves.Count ? true : false;  
+    }
+
     public Wave NextWave()
     {
-        Debug.Log(currentWave);
-        Debug.Log(Waves.Count);
         if (currentWave >= Waves.Count)
         {
+            currentWave++;
             return BossWave;
         }
         return Waves[currentWave++];

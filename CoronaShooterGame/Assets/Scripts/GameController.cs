@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Xml.Linq;
+using Cinemachine;
 
 public class GameController : MonoBehaviour
 {
@@ -31,8 +32,12 @@ public class GameController : MonoBehaviour
     [HideInInspector]
     public AudioController audioController;
     public GameObject BossPrefab;
+    public ParticleSystem ExplosionEffect;
+    public GameObject Camera;
+    public GameObject HitPointsCanvas;
 
     //Private variables
+    private int playerDamage;
     private int currentPlayerlives;
     private int maxPlayerLives;
     private Queue<GameObject> backgrounds;
@@ -43,6 +48,8 @@ public class GameController : MonoBehaviour
     private List<Level> levels;
     private List<GameObject> playerLifes;
     private int selectedLevelIndex;
+    private float cameraShakeTime;
+    private float cameraShakeIntensity;
 
     public bool isGameActive
     {
@@ -59,11 +66,6 @@ public class GameController : MonoBehaviour
             return;
         }
         maxPlayerLives = 3;
-        currentPlayerlives = maxPlayerLives;
-        enemyCount = 0;
-        playerLifes = UIHandler.UI.AddPlayerLifes(currentPlayerlives, PlayerLife);
-
-        selectedLevelIndex = 0;
 
         audioController = GetComponent<AudioController>();
         backgrounds = new Queue<GameObject>();
@@ -88,11 +90,12 @@ public class GameController : MonoBehaviour
                 if (pixel == enemyColor)
                 {
                     GameObject spawnedEnemy = Instantiate(Enemy, new Vector3(x * 2 - spawnImage.width + 1, y * 2 + Player.transform.position.y, 0), Quaternion.identity);
-                    spawnedEnemy.GetComponent<EnemyController>().setSpeed(Random.Range(1f, 2.5f));
+                    spawnedEnemy.GetComponent<EnemyController>().SetupEnemy(Random.Range(1f, 2.5f), Random.Range(5f, 35f));
                     enemyCount++;
                 }
                 if (pixel == playerColor)
                 {
+                    Player.SetActive(true);
                     Player.transform.position = new Vector3(0, 0);
                 }
             }
@@ -129,15 +132,61 @@ public class GameController : MonoBehaviour
     {
         if (!gameIsActive)
         {
-            if (Input.GetKey(KeyCode.Space))
+            if (!Player.activeSelf && UIHandler.UI.GameUI.activeSelf)
             {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    RestartLevel();
+                }
+            }
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                UnpauseGame();
             }
 
             return;
         }
 
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            PauseGame();
+            return;
+        }
+
+        cameraShakeTime -= Time.deltaTime;
+
+        if (cameraShakeTime <= 0)
+        {
+            ShakeCamera(0, 0);
+        }
+
         MoveFields();
+    }
+
+    private void ShakeCamera(float intensity, float time)
+    {
+        CinemachineBasicMultiChannelPerlin camShake = 
+            Camera.GetComponent<CinemachineVirtualCamera>().GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
+
+        cameraShakeIntensity = intensity;
+        cameraShakeTime = time;
+        camShake.m_AmplitudeGain = intensity;
+    }
+
+    private void UnpauseGame()
+    {
+        Debug.Log("Unpausing game.. ");
+        audioController.UnpauseAllSounds();
+        gameIsActive = true;
+    }
+
+    private void PauseGame()
+    {
+        Debug.Log("Pausing game.. ");
+        audioController.PauseAllSounds();
+        Player.GetComponent<PlayerController>().StopPlayer();
+        gameIsActive = false;
     }
 
     /// <summary>
@@ -145,7 +194,6 @@ public class GameController : MonoBehaviour
     /// </summary>
     private void MoveFields()
     {
-        Background.transform.Translate(new Vector3(0, -1 * gameSpeed * Time.deltaTime, 0));
         ChasingField.transform.Translate(new Vector3(0, 1 * gameSpeed * 0.7f * Time.deltaTime, 0));
         foreach (GameObject wall in Walls)
         {
@@ -167,6 +215,11 @@ public class GameController : MonoBehaviour
             if (backgrounds.Count > 3)
             {
                 Destroy(backgrounds.Dequeue());
+            }
+
+            foreach (GameObject background in backgrounds)
+            {
+                Debug.Log("Moving background: " + background.name.ToString());
             }
         }
     }
@@ -199,7 +252,7 @@ public class GameController : MonoBehaviour
         BossWave bossWave = LoadBossWave(bossWaveXML);
         Sprite backgroundSprite = LoadLevelBackground(levelXML);
 
-        Level level = new Level(levelName, waves, bossWave, backgroundSprite, LoadLevelSound(levelXML));
+        Level level = new Level(levelName, waves, bossWave, backgroundSprite, LoadLevelSound(levelXML), index == 0 ? true : false);
         UIHandler.UI.AddLevelToSelector(level, index);
 
         return level;
@@ -265,6 +318,11 @@ public class GameController : MonoBehaviour
     {
         Background.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = backgroundSprite;
 
+        while (backgrounds.Count > 0)
+        {
+            Destroy(backgrounds.Dequeue().gameObject);
+        }
+
         backgrounds.Clear();
         GameObject spawnedBg = Instantiate(Background, Vector3.zero, Quaternion.identity);
         backgrounds.Enqueue(spawnedBg);
@@ -279,6 +337,24 @@ public class GameController : MonoBehaviour
     public void StartLevel(int index)
     {
         Level level = levels[index];
+
+        if (!level.Playable)
+        {
+            return;
+        }
+
+        enemyCount = 0;
+        Background.transform.position = (Vector3.zero);
+        ChasingField.transform.position = (Vector3.zero);
+
+        currentPlayerlives = maxPlayerLives;
+        playerLifes = UIHandler.UI.AddPlayerLifes(currentPlayerlives, PlayerLife);
+        selectedLevelIndex = index;
+
+        DestoyAllEnemies();
+        DestroyAllParticles();
+        DestroyAllProjectiles();
+        level.ResetWaves();
         LoadBackgroundSprite(level.BackgroundSprite);
         audioController.PlaySound(level.LevelSoundtrack);
         gameIsActive = true;
@@ -292,6 +368,13 @@ public class GameController : MonoBehaviour
     private void StartWave()
     {
         Level level = levels[selectedLevelIndex];
+
+        if (level.IsBossWave())
+        {
+            LevelCompleted();
+            return;
+        }
+
         Wave wave = level.NextWave();
         if (wave is BossWave)
         {
@@ -299,8 +382,51 @@ public class GameController : MonoBehaviour
             audioController.StopSound(level.LevelSoundtrack);
             audioController.PlaySound(bossWave.BossSoundtrack);
         }
+
         UIHandler.UI.SetWaveText(wave.WaveName);
         readSpawnImage(wave.WavePicture);
+    }
+
+    public void LevelCompleted()
+    {
+        Level level = levels[selectedLevelIndex];
+        int nextLevel = selectedLevelIndex + 1;
+        levels[nextLevel].Playable = true;
+        audioController.StopAllSounds();
+        gameIsActive = false;
+        UIHandler.UI.OpenLevelSelectorUI();
+    }
+
+    public void RestartLevel()
+    {
+        StartLevel(selectedLevelIndex);
+    }
+
+    private void DestroyAllProjectiles()
+    {
+        GameObject[] allProjectiles = GameObject.FindGameObjectsWithTag("Projectile");
+        foreach (GameObject projectile in allProjectiles)
+        {
+            Destroy(projectile);
+        }
+    }
+
+    private void DestroyAllParticles()
+    {
+        GameObject[] allParticles = GameObject.FindGameObjectsWithTag("Particle");
+        foreach (GameObject particle in allParticles)
+        {
+            Destroy(particle);
+        }
+    }
+
+    private void DestoyAllEnemies()
+    {
+        GameObject[] allEnemies = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject enemy in allEnemies)
+        {
+            Destroy(enemy);
+        }
     }
 
     public void OnPlayerHit(Collider2D collision)
@@ -311,9 +437,26 @@ public class GameController : MonoBehaviour
 
     public void OnProjectileHitEnemy(GameObject projectile, Collider2D collision)
     {
+        GameObject spawnedHitPoints = Instantiate(HitPointsCanvas, new Vector3(
+            collision.transform.position.x,
+            collision.transform.position.y + 0.5f,
+            collision.transform.position.z),
+            Quaternion.identity);
+        spawnedHitPoints.GetComponent<Canvas>().worldCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        spawnedHitPoints.GetComponent<HitPointHandler>().HitPointsSetup(10, 1f, 0.7f, Color.yellow);
+
+        EnemyController EC = collision.GetComponent<EnemyController>();
+
+        ShakeCamera(3.5f, .1f);
+        EC.Health -= 10;
+
+        if (EC.Health <= 0)
+        {
+            DestroyEnemy(collision.gameObject);
+            AddScore(20);
+        }
+
         Destroy(projectile.gameObject);
-        DestroyEnemy(collision.gameObject);
-        AddScore(20);
     }
 
     public void OnEnemyHitBorder(GameObject enemy)
@@ -324,6 +467,8 @@ public class GameController : MonoBehaviour
 
     private void DestroyEnemy(GameObject enemy)
     {
+        ParticleSystem expl = Instantiate(ExplosionEffect, enemy.transform.position, Quaternion.identity);
+        expl.Play();
         audioController.PlaySound("Enemy Death");
         ReduceEnemyCount();
         Destroy(enemy);

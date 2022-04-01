@@ -27,6 +27,22 @@ public class AudioController : MonoBehaviour
         }
     }
 
+    public void PauseAllSounds()
+    {
+        foreach (Sound sound in Sounds)
+        {
+            sound.Source.Pause();
+        }
+    }
+
+    public void UnpauseAllSounds()
+    {
+        foreach (Sound sound in Sounds)
+        {
+            sound.Source.UnPause();
+        }
+    }
+
     public void PlaySound(string name)
     {
         Sound sound = FindSound(name);

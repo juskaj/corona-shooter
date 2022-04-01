@@ -54,6 +54,7 @@ public class UIHandler : MonoBehaviour
 
     public void OpenLevelSelectorUI()
     {
+        MainMenuUI.SetActive(true);
         GameUI.SetActive(false);
         TitleUI.SetActive(false);
         LevelSelectorUI.SetActive(true);
@@ -61,6 +62,7 @@ public class UIHandler : MonoBehaviour
 
     public void OpenMainMenuTitleUI()
     {
+        MainMenuUI.SetActive(true);
         GameUI.SetActive(false);
         TitleUI.SetActive(true);
         LevelSelectorUI.SetActive(false);
@@ -83,6 +85,7 @@ public class UIHandler : MonoBehaviour
     {
         MainMenuUI.SetActive(false);
         GameUI.SetActive(true);
+        GameOverTextGameObject.SetActive(false);
     }
 
     public void SetGameOverScreen(int score)
@@ -103,6 +106,13 @@ public class UIHandler : MonoBehaviour
 
     public List<GameObject> AddPlayerLifes(int amount, Texture2D lifeTexture)
     {
+        int prevLives = PlayerLivesPanel.transform.childCount;
+
+        for (int i = 0; i < prevLives; i++)
+        {
+            Destroy(PlayerLivesPanel.transform.GetChild(i).gameObject);
+        }
+
         List<GameObject> lifes = new List<GameObject>();
         for (int i = 0; i < amount; i++)
         {
