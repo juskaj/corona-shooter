@@ -6,10 +6,26 @@
 		<sound>Level 1 Soundtrack</sound>
 		<wave>
 			<waveName>Wave: 1</waveName>
-			<wavePic>wave_3_boss.png</wavePic>
+			<wavePic>wave_1_1.png</wavePic>
+		</wave>
+		<wave>
+			<waveName>Wave: 2</waveName>
+			<wavePic>wave_1_2.png</wavePic>
+		</wave>
+		<wave>
+			<waveName>Wave: 3</waveName>
+			<wavePic>wave_1_3.png</wavePic>
+		</wave>
+		<wave>
+			<waveName>Wave: 4</waveName>
+			<wavePic>wave_1_4.png</wavePic>
+		</wave>
+		<wave>
+			<waveName>Wave: 5</waveName>
+			<wavePic>wave_1_5.png</wavePic>
 		</wave>
 		<bossWave>
-			<waveName>Bossas</waveName>
+			<waveName>Boss wave</waveName>
 			<wavePic>wave_1_boss.png</wavePic>
 			<bossName>Bossas1</bossName>
 			<bossSound>Boss soundtrack</bossSound>
@@ -40,7 +56,7 @@
 			<wavePic>wave_2_5.png</wavePic>
 		</wave>
 		<bossWave>
-			<waveName>Bossas</waveName>
+			<waveName>Boss wave</waveName>
 			<wavePic>wave_2_boss.png</wavePic>
 			<bossName>Bossas1</bossName>
 			<bossSound>Boss soundtrack</bossSound>
@@ -63,7 +79,7 @@
 			<wavePic>wave_3_3.png</wavePic>
 		</wave>
 		<bossWave>
-			<waveName>Bossas</waveName>
+			<waveName>Boss wave</waveName>
 			<wavePic>wave_3_boss.png</wavePic>
 			<bossName>Bossas1</bossName>
 			<bossSound>Boss soundtrack</bossSound>

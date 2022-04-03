@@ -174,11 +174,12 @@ public class GameController : MonoBehaviour
         camShake.m_AmplitudeGain = intensity;
     }
 
-    private void UnpauseGame()
+    public void UnpauseGame()
     {
         Debug.Log("Unpausing game.. ");
         audioController.UnpauseAllSounds();
         gameIsActive = true;
+        UIHandler.UI.StartGame();
     }
 
     private void PauseGame()
@@ -187,6 +188,7 @@ public class GameController : MonoBehaviour
         audioController.PauseAllSounds();
         Player.GetComponent<PlayerController>().StopPlayer();
         gameIsActive = false;
+        UIHandler.UI.OpenPauseUI();
     }
 
     /// <summary>

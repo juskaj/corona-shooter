@@ -22,15 +22,14 @@ public class UIHandler : MonoBehaviour
         gameOverText = GameOverTextGameObject.GetComponent<TMP_Text>();
         waveText = WaveTextGameObject.GetComponent<TMP_Text>();
         scoreText.text = "Score: 0";
-        MainMenuUI.SetActive(true);
-        GameOverTextGameObject.SetActive(false);
-        GameUI.SetActive(false);
-        LevelSelectorUI.SetActive(false);
+        OpenMainMenuTitleUI();
     }
 
     public GameObject LevelSelectorUI;
     public GameObject LevelSelectorLevel;
     public GameObject TitleUI;
+    public GameObject PauseUI;
+    public GameObject UpgradesUI;
 
     public GameObject MainMenuUI;
     public GameObject GameUI;
@@ -52,20 +51,44 @@ public class UIHandler : MonoBehaviour
         Application.Quit();
     }
 
+    public void OpenUpgradesUI()
+    {
+        MainMenuUI.SetActive(true);
+        TitleUI.SetActive(false);
+        PauseUI.SetActive(false);
+        GameUI.SetActive(false);
+        LevelSelectorUI.SetActive(false);
+        UpgradesUI.SetActive(true);
+    }
+
+    public void OpenPauseUI()
+    {
+        MainMenuUI.SetActive(false);
+        LevelSelectorUI.SetActive(false);
+        GameUI.SetActive(true);
+        PauseUI.SetActive(true);
+        TitleUI.SetActive(false);
+        UpgradesUI.SetActive(false);
+    }
+
     public void OpenLevelSelectorUI()
     {
         MainMenuUI.SetActive(true);
-        GameUI.SetActive(false);
-        TitleUI.SetActive(false);
         LevelSelectorUI.SetActive(true);
+        GameUI.SetActive(false);
+        PauseUI.SetActive(false);
+        TitleUI.SetActive(false);
+        UpgradesUI.SetActive(false);
     }
 
     public void OpenMainMenuTitleUI()
     {
         MainMenuUI.SetActive(true);
-        GameUI.SetActive(false);
         TitleUI.SetActive(true);
+        PauseUI.SetActive(false);
+        GameUI.SetActive(false);
         LevelSelectorUI.SetActive(false);
+        UpgradesUI.SetActive(false);
     }
 
     void OnLevelSelectorClick(int index)
@@ -75,7 +98,7 @@ public class UIHandler : MonoBehaviour
 
     public void AddLevelToSelector(Level level, int index)
     {
-        GameObject sLevel = Instantiate(LevelSelectorLevel, LevelSelectorUI.transform.GetChild(0));
+        GameObject sLevel = Instantiate(LevelSelectorLevel, LevelSelectorUI.transform.GetChild(0).GetChild(0));
         sLevel.GetComponent<Button>().onClick.AddListener(delegate { OnLevelSelectorClick(index); });
         sLevel.transform.GetChild(0).GetChild(0).GetComponent<RawImage>().texture = level.BackgroundSprite.texture;
         sLevel.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = level.Name;
@@ -84,8 +107,10 @@ public class UIHandler : MonoBehaviour
     public void StartGame()
     {
         MainMenuUI.SetActive(false);
+        PauseUI.SetActive(false);
         GameUI.SetActive(true);
         GameOverTextGameObject.SetActive(false);
+        UpgradesUI.SetActive(false);
     }
 
     public void SetGameOverScreen(int score)
