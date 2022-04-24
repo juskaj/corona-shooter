@@ -8,22 +8,6 @@
 			<waveName>Wave: 1</waveName>
 			<wavePic>wave_1_1.png</wavePic>
 		</wave>
-		<wave>
-			<waveName>Wave: 2</waveName>
-			<wavePic>wave_1_2.png</wavePic>
-		</wave>
-		<wave>
-			<waveName>Wave: 3</waveName>
-			<wavePic>wave_1_3.png</wavePic>
-		</wave>
-		<wave>
-			<waveName>Wave: 4</waveName>
-			<wavePic>wave_1_4.png</wavePic>
-		</wave>
-		<wave>
-			<waveName>Wave: 5</waveName>
-			<wavePic>wave_1_5.png</wavePic>
-		</wave>
 		<bossWave>
 			<waveName>Boss wave</waveName>
 			<wavePic>wave_1_boss.png</wavePic>

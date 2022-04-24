@@ -5,15 +5,21 @@ using UnityEngine;
 public class ProjectileController : MonoBehaviour
 {
     private int speed;
+    private float yCoords;
+
+    private void Start()
+    {
+        yCoords = gameObject.transform.position.y;
+    }
 
     void Update()
     {
-        if (!GameController.GM.isGameActive)
+        if (!GameController.GM.IsGameActive)
         {
             return;
         }
         gameObject.transform.Translate(0, Vector2.up.y * Time.deltaTime * speed, 0);
-        if (transform.position.y > 500)
+        if (transform.position.y > yCoords + 10)
         {
             Destroy(gameObject);
         }
@@ -21,15 +27,15 @@ public class ProjectileController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.tag == "Enemy")
+        if (collision.gameObject.CompareTag("Enemy"))
         {
             GameController.GM.OnProjectileHitEnemy(gameObject, collision);
         }
     }
 
-    public void setProjectileSpeed(int speed, Transform transform)
+    public void SetProjectileSpeed(int speed, Vector2 position)
     {
         this.speed = speed;
-        this.transform.position = new Vector3(transform.position.x, transform.position.y + 0.6f, 0);
+        this.transform.position = new Vector3(position.x, position.y + 0.6f, 0);
     }
 }

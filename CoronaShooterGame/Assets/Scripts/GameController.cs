@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Xml.Linq;
 using Cinemachine;
+using System.Collections;
 
 public class GameController : MonoBehaviour
 {
@@ -19,7 +20,6 @@ public class GameController : MonoBehaviour
         GM = this;
     }
 
-    //Public variables
     public Boss[] AllBosses;
     public float gameSpeed = 1f;
     public GameObject Enemy;
@@ -32,32 +32,32 @@ public class GameController : MonoBehaviour
     [HideInInspector]
     public AudioController audioController;
     public GameObject BossPrefab;
-    public ParticleSystem ExplosionEffect;
+    public GameObject ExplosionEffect;
     public GameObject Camera;
     public GameObject HitPointsCanvas;
+    public PlayerStats playerStats;
 
-    //Private variables
-    private int playerDamage;
     private int currentPlayerlives;
-    private int maxPlayerLives;
     private Queue<GameObject> backgrounds;
     private Vector2 lastBackground;
     private bool gameIsActive;
-    private int score;
     private int enemyCount;
     private List<Level> levels;
     private List<GameObject> playerLifes;
     private int selectedLevelIndex;
     private float cameraShakeTime;
     private float cameraShakeIntensity;
+    private float cooldownTime;
 
-    public bool isGameActive
+    public bool IsGameActive
     {
         get { return gameIsActive; }
     }
 
     void Start()
-    {   
+    {
+        playerStats = new PlayerStats(7000, 1, 1, 1, 1);
+
         gameIsActive = false;
         levels = LoadLevels();
 
@@ -65,18 +65,16 @@ public class GameController : MonoBehaviour
         {
             return;
         }
-        maxPlayerLives = 3;
 
         audioController = GetComponent<AudioController>();
         backgrounds = new Queue<GameObject>();
-        score = 0;
     }
 
     /// <summary>
     /// Reads an image to determine where to spawn enemies (optional: player)
     /// </summary>
     /// <param name="spawnImage">Image to read</param>
-    private void readSpawnImage(Texture2D spawnImage)
+    private void ReadSpawnImage(Texture2D spawnImage)
     {
         Color enemyColor = new Color(0, 0, 0, 1);
         Color playerColor = new Color(0, 1, 0, 1);
@@ -108,8 +106,8 @@ public class GameController : MonoBehaviour
     /// <param name="amount">Amount to add</param>
     public void AddScore(int amount)
     {
-        score += amount;
-        UIHandler.UI.SetScore(score);
+        playerStats.Score += amount;
+        UIHandler.UI.SetScore(playerStats.Score);
     }
 
     /// <summary>
@@ -123,8 +121,8 @@ public class GameController : MonoBehaviour
         {
             UIHandler.UI.SetPlayerLifeLoss(life, PlayerLifeLost);
         }
-        Player.gameObject.SetActive(false);
-        UIHandler.UI.SetGameOverScreen(score);
+        Player.SetActive(false);
+        UIHandler.UI.SetGameOverScreen(playerStats.Score);
         gameIsActive = false;
     }
 
@@ -132,7 +130,7 @@ public class GameController : MonoBehaviour
     {
         if (!gameIsActive)
         {
-            if (!Player.activeSelf && UIHandler.UI.GameUI.activeSelf)
+            if (!Player.activeSelf && UIHandler.UI.GameOverTextGameObject.activeSelf)
             {
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
@@ -140,12 +138,18 @@ public class GameController : MonoBehaviour
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (Input.GetKeyDown(KeyCode.Escape) && !UIHandler.UI.GameOverTextGameObject.activeSelf && UIHandler.UI.GameUI.activeSelf)
             {
                 UnpauseGame();
             }
 
             return;
+        }
+
+        if (cooldownTime > 0)
+        {
+            cooldownTime -= Time.deltaTime * playerStats.CooldownLevel;
+            UIHandler.UI.UpdateCooldown(cooldownTime, 0.5f);
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -176,7 +180,6 @@ public class GameController : MonoBehaviour
 
     public void UnpauseGame()
     {
-        Debug.Log("Unpausing game.. ");
         audioController.UnpauseAllSounds();
         gameIsActive = true;
         UIHandler.UI.StartGame();
@@ -254,7 +257,7 @@ public class GameController : MonoBehaviour
         BossWave bossWave = LoadBossWave(bossWaveXML);
         Sprite backgroundSprite = LoadLevelBackground(levelXML);
 
-        Level level = new Level(levelName, waves, bossWave, backgroundSprite, LoadLevelSound(levelXML), index == 0 ? true : false);
+        Level level = new Level(levelName, waves, bossWave, backgroundSprite, LoadLevelSound(levelXML), index == 0);
         UIHandler.UI.AddLevelToSelector(level, index);
 
         return level;
@@ -322,7 +325,7 @@ public class GameController : MonoBehaviour
 
         while (backgrounds.Count > 0)
         {
-            Destroy(backgrounds.Dequeue().gameObject);
+            Destroy(backgrounds.Dequeue());
         }
 
         backgrounds.Clear();
@@ -349,7 +352,7 @@ public class GameController : MonoBehaviour
         Background.transform.position = (Vector3.zero);
         ChasingField.transform.position = (Vector3.zero);
 
-        currentPlayerlives = maxPlayerLives;
+        currentPlayerlives = playerStats.HealthLevel;
         playerLifes = UIHandler.UI.AddPlayerLifes(currentPlayerlives, PlayerLife);
         selectedLevelIndex = index;
 
@@ -386,7 +389,7 @@ public class GameController : MonoBehaviour
         }
 
         UIHandler.UI.SetWaveText(wave.WaveName);
-        readSpawnImage(wave.WavePicture);
+        ReadSpawnImage(wave.WavePicture);
     }
 
     public void LevelCompleted()
@@ -395,13 +398,18 @@ public class GameController : MonoBehaviour
         int nextLevel = selectedLevelIndex + 1;
         levels[nextLevel].Playable = true;
         audioController.StopAllSounds();
+        UIHandler.UI.GameUI.SetActive(false);
         gameIsActive = false;
         UIHandler.UI.OpenLevelSelectorUI();
     }
 
     public void RestartLevel()
     {
-        StartLevel(selectedLevelIndex);
+        if (UIHandler.UI.GameUI.activeSelf)
+        {
+            Debug.Log("Restarting Level");
+            StartLevel(selectedLevelIndex);
+        }
     }
 
     private void DestroyAllProjectiles()
@@ -445,12 +453,12 @@ public class GameController : MonoBehaviour
             collision.transform.position.z),
             Quaternion.identity);
         spawnedHitPoints.GetComponent<Canvas>().worldCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
-        spawnedHitPoints.GetComponent<HitPointHandler>().HitPointsSetup(10, 1f, 0.7f, Color.yellow);
+        spawnedHitPoints.GetComponent<HitPointHandler>().HitPointsSetup(10 * playerStats.DamageLevel, 1f, 0.7f, Color.yellow);
 
         EnemyController EC = collision.GetComponent<EnemyController>();
 
         ShakeCamera(3.5f, .1f);
-        EC.Health -= 10;
+        EC.Health -= 10 * playerStats.DamageLevel;
 
         if (EC.Health <= 0)
         {
@@ -458,7 +466,20 @@ public class GameController : MonoBehaviour
             AddScore(20);
         }
 
-        Destroy(projectile.gameObject);
+        Destroy(projectile);
+    }
+
+    public void OnProjectileSpawn(Vector2 pos, GameObject projectileToSpawn, int projectileSpeed)
+    {
+        if (cooldownTime > 0)
+        {
+            return;
+        }
+
+        GameObject projectileObject = Instantiate(projectileToSpawn);
+        audioController.PlaySound("Shooting sound");
+        projectileObject.GetComponent<ProjectileController>().SetProjectileSpeed(projectileSpeed, pos);
+        cooldownTime = 0.5f;
     }
 
     public void OnEnemyHitBorder(GameObject enemy)
@@ -469,8 +490,9 @@ public class GameController : MonoBehaviour
 
     private void DestroyEnemy(GameObject enemy)
     {
-        ParticleSystem expl = Instantiate(ExplosionEffect, enemy.transform.position, Quaternion.identity);
-        expl.Play();
+        GameObject expl = Instantiate(ExplosionEffect, enemy.transform.position, Quaternion.identity);
+        ParticleSystem explParticles = expl.transform.GetChild(0).GetComponent<ParticleSystem>();
+        explParticles.Play();
         audioController.PlaySound("Enemy Death");
         ReduceEnemyCount();
         Destroy(enemy);
@@ -497,5 +519,16 @@ public class GameController : MonoBehaviour
         {
             StartWave();
         }
+    }
+
+    private IEnumerator WaitAndDestroy(float time, GameObject objectToDestroy)
+    {
+        yield return new WaitForSeconds(time);
+        Destroy(objectToDestroy);
+    }
+
+    public void Upgrade()
+    {
+
     }
 }

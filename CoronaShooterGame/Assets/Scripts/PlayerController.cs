@@ -7,7 +7,6 @@ public class PlayerController : MonoBehaviour
     public int playerSpeed = 5;
     Rigidbody2D rb;
 
-    [SerializeField]
     public float speedSmoothness = 0.2f;
     private Vector2 currentVelocity;
     private Vector2 currentVector;
@@ -22,22 +21,20 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (!GameController.GM.isGameActive)
+        if (!GameController.GM.IsGameActive)
         {
             return;
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            GameObject projectileObject = Instantiate(projectile);
-            GameController.GM.audioController.PlaySound("Shooting sound");
-            projectileObject.GetComponent<ProjectileController>().setProjectileSpeed(projectileSpeed, transform);
+            GameController.GM.OnProjectileSpawn(transform.position, projectile, projectileSpeed);
         }
     }
 
     private void FixedUpdate()
     {
-        if (!GameController.GM.isGameActive)
+        if (!GameController.GM.IsGameActive)
         {
             return;
         }
@@ -48,7 +45,7 @@ public class PlayerController : MonoBehaviour
         direction.Normalize();
 
         currentVector = Vector2.SmoothDamp(currentVector, direction, ref currentVelocity, speedSmoothness);
-        rb.velocity = currentVector * 100 * playerSpeed * Time.deltaTime;
+        rb.velocity = 100 * (GameController.GM.playerStats.SpeedLevel + 4) * Time.deltaTime * currentVector;
     }
 
     public void StopPlayer()
@@ -58,11 +55,11 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.tag == "Enemy")
+        if (collision.gameObject.CompareTag("Enemy"))
         {
             GameController.GM.OnPlayerHit(collision);
         }
-        if (collision.gameObject.tag == "Border")
+        if (collision.gameObject.CompareTag("Border"))
         {
             GameController.GM.OnPlayerDeath();
         }

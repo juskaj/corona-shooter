@@ -15,7 +15,7 @@ public class EnemyController : MonoBehaviour
 
     private void Update()
     {
-        if (!GameController.GM.isGameActive)
+        if (!GameController.GM.IsGameActive)
         {
             return;
         }
@@ -24,7 +24,7 @@ public class EnemyController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.tag == "Border")
+        if (collision.CompareTag("Border"))
         {
             GameController.GM.OnEnemyHitBorder(gameObject);
         }    

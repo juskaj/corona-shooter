@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
 
 public class UIHandler : MonoBehaviour
 {
@@ -31,6 +32,13 @@ public class UIHandler : MonoBehaviour
     public GameObject PauseUI;
     public GameObject UpgradesUI;
 
+    public GameObject HealthUpgrade;
+    public GameObject SpeedUpgrade;
+    public GameObject CooldownUpgrade;
+    public GameObject DamageUpgrade;
+
+    public Image CooldownImage;
+
     public GameObject MainMenuUI;
     public GameObject GameUI;
     public GameObject ScoreTextGameObject;
@@ -41,10 +49,6 @@ public class UIHandler : MonoBehaviour
     private TMP_Text waveText;
     public GameObject PlayerLivesPanel;
     public GameObject PlayerLife;
-
-    void Start()
-    {
-    }
 
     public void QuitGame()
     {
@@ -93,6 +97,8 @@ public class UIHandler : MonoBehaviour
 
     void OnLevelSelectorClick(int index)
     {
+        Debug.Log("Starting Game");
+        EventSystem.current.SetSelectedGameObject(null);
         GameController.GM.StartLevel(index);
     }
 
@@ -152,5 +158,64 @@ public class UIHandler : MonoBehaviour
     public void SetPlayerLifeLoss(GameObject life, Texture2D lostLifeTexture)
     {
         life.GetComponent<RawImage>().texture = lostLifeTexture;
-    }  
+    }
+    
+    public void UpdateCooldown(float currentCooldown, float maxCooldown)
+    {
+        CooldownImage.fillAmount = currentCooldown / maxCooldown;
+    }
+
+    public void UpgradeCooldown()
+    {
+        int upgradeCost = (int)Mathf.Pow(GameController.GM.playerStats.CooldownLevel, 2f) * 100;
+
+        if (GameController.GM.playerStats.Score >= upgradeCost)
+        {
+            GameController.GM.playerStats.CooldownLevel++;
+            GameController.GM.playerStats.Score -= upgradeCost;
+            CooldownUpgrade.transform.GetChild(3).GetComponent<TMP_Text>().text = string.Format("Cost: {0}",
+                (int)Mathf.Pow(GameController.GM.playerStats.CooldownLevel, 2f) * 100);
+        }
+
+    }
+
+    public void UpgradeSpeed()
+    {
+        int upgradeCost = GameController.GM.playerStats.SpeedLevel * 100;
+
+        if (GameController.GM.playerStats.Score >= upgradeCost)
+        {
+            GameController.GM.playerStats.SpeedLevel++;
+            GameController.GM.playerStats.Score -= upgradeCost;
+
+            SpeedUpgrade.transform.GetChild(3).GetComponent<TMP_Text>().text = string.Format("Cost: {0}",
+                (int)Mathf.Pow(GameController.GM.playerStats.SpeedLevel, 2f) * 100);
+        }
+    }
+
+    public void UpgradeHealth()
+    {
+        int upgradeCost = GameController.GM.playerStats.HealthLevel * 100;
+
+        if (GameController.GM.playerStats.Score >= upgradeCost)
+        {
+            GameController.GM.playerStats.HealthLevel++;
+            GameController.GM.playerStats.Score -= upgradeCost;
+            HealthUpgrade.transform.GetChild(3).GetComponent<TMP_Text>().text = string.Format("Cost: {0}",
+                (int)Mathf.Pow(GameController.GM.playerStats.HealthLevel, 2f) * 100);
+        }
+    }
+
+    public void UpgradeDamage()
+    {
+        int upgradeCost = GameController.GM.playerStats.DamageLevel * 100;
+
+        if (GameController.GM.playerStats.Score > upgradeCost)
+        {
+            GameController.GM.playerStats.DamageLevel++;
+            GameController.GM.playerStats.Score -= upgradeCost;
+            DamageUpgrade.transform.GetChild(3).GetComponent<TMP_Text>().text = string.Format("Cost: {0}",
+                (int)Mathf.Pow(GameController.GM.playerStats.DamageLevel, 2f) * 100);
+        }
+    }
 }
