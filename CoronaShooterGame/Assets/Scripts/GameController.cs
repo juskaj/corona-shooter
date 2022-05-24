@@ -20,7 +20,6 @@ public class GameController : MonoBehaviour
         GM = this;
     }
 
-    public Boss[] AllBosses;
     public float gameSpeed = 1f;
     public GameObject Enemy;
     public GameObject Background;
@@ -36,7 +35,9 @@ public class GameController : MonoBehaviour
     public GameObject Camera;
     public GameObject HitPointsCanvas;
     public PlayerStats playerStats;
+    public bool bossWave;
 
+    private Level currentLevel;
     private int currentPlayerlives;
     private Queue<GameObject> backgrounds;
     private Vector2 lastBackground;
@@ -48,6 +49,7 @@ public class GameController : MonoBehaviour
     private float cameraShakeTime;
     private float cameraShakeIntensity;
     private float cooldownTime;
+    private float bossCooldownTime;
 
     public bool IsGameActive
     {
@@ -66,6 +68,7 @@ public class GameController : MonoBehaviour
             return;
         }
 
+        bossWave = false;
         audioController = GetComponent<AudioController>();
         backgrounds = new Queue<GameObject>();
     }
@@ -74,10 +77,11 @@ public class GameController : MonoBehaviour
     /// Reads an image to determine where to spawn enemies (optional: player)
     /// </summary>
     /// <param name="spawnImage">Image to read</param>
-    private void ReadSpawnImage(Texture2D spawnImage)
+    private void ReadSpawnImage(Texture2D spawnImage, Sprite enemySprite, Boss boss)
     {
         Color enemyColor = new Color(0, 0, 0, 1);
         Color playerColor = new Color(0, 1, 0, 1);
+        Color bossColor = new Color(0, 0, 1, 1);
 
         for (int y = 0; y < spawnImage.height; y++)
         {
@@ -88,7 +92,13 @@ public class GameController : MonoBehaviour
                 if (pixel == enemyColor)
                 {
                     GameObject spawnedEnemy = Instantiate(Enemy, new Vector3(x * 2 - spawnImage.width + 1, y * 2 + Player.transform.position.y, 0), Quaternion.identity);
-                    spawnedEnemy.GetComponent<EnemyController>().SetupEnemy(Random.Range(1f, 2.5f), Random.Range(5f, 35f));
+                    spawnedEnemy.GetComponent<EnemyController>().SetupEnemy(Random.Range(1f, 2.5f), Random.Range(5f, 35f), false, enemySprite, Player);
+                    enemyCount++;
+                }
+                if (pixel == bossColor)
+                {
+                    GameObject spawnedEnemy = Instantiate(Enemy, new Vector3(x * 2 - spawnImage.width + 1, y * 2 + Player.transform.position.y, 0), Quaternion.identity);
+                    spawnedEnemy.GetComponent<EnemyController>().SetupEnemy(0f, boss.Health, true, boss.Sprite, Player);
                     enemyCount++;
                 }
                 if (pixel == playerColor)
@@ -146,6 +156,15 @@ public class GameController : MonoBehaviour
             return;
         }
 
+        if (bossWave)
+        {
+            if (bossCooldownTime > 0)
+            {
+                bossCooldownTime -= Time.deltaTime * currentLevel.LevelBoss.Cooldown;
+            }
+        }
+
+
         if (cooldownTime > 0)
         {
             cooldownTime -= Time.deltaTime * playerStats.CooldownLevel;
@@ -165,7 +184,11 @@ public class GameController : MonoBehaviour
             ShakeCamera(0, 0);
         }
 
-        MoveFields();
+        if (!bossWave)
+        {
+            MoveFields();
+        }
+
     }
 
     private void ShakeCamera(float intensity, float time)
@@ -256,8 +279,23 @@ public class GameController : MonoBehaviour
         XElement bossWaveXML = levelXML.Element("bossWave");
         BossWave bossWave = LoadBossWave(bossWaveXML);
         Sprite backgroundSprite = LoadLevelBackground(levelXML);
+        Sprite enemySprite = LoadEnemySprite(levelXML);
+        Sprite bossSprite = LoadBossSprite(bossWaveXML);
+        int bossHealth = int.Parse(bossWaveXML.Element("bossHealth").Value);
+        float bossCooldown = float.Parse(bossWaveXML.Element("bossCooldown").Value);
+        string bossName = bossWaveXML.Element("bossName").Value;
+        float bossProjectileSpeed = float.Parse(bossWaveXML.Element("bossProjectileSpeed").Value);
 
-        Level level = new Level(levelName, waves, bossWave, backgroundSprite, LoadLevelSound(levelXML), index == 0);
+        string playerProjectileSpriteString = levelXML.Element("projectileSprite").Value;
+        RuntimeAnimatorController playerProjectileSprite = Resources.Load<RuntimeAnimatorController>(string.Format("Images/{0}",
+            playerProjectileSpriteString.Substring(0, playerProjectileSpriteString.LastIndexOf('.'))));
+
+        string bossProjectileSpriteString = bossWaveXML.Element("bossProjectileSprite").Value;
+        RuntimeAnimatorController bossProjectileSprite = Resources.Load<RuntimeAnimatorController>(string.Format("Images/{0}",
+            bossProjectileSpriteString.Substring(0, bossProjectileSpriteString.LastIndexOf('.'))));
+
+        Level level = new Level(levelName, waves, bossWave, backgroundSprite, LoadLevelSound(levelXML), index == 0, enemySprite,
+            new Boss(bossName, bossSprite, bossCooldown, bossHealth, bossProjectileSpeed), playerProjectileSprite, bossProjectileSprite);
         UIHandler.UI.AddLevelToSelector(level, index);
 
         return level;
@@ -297,6 +335,18 @@ public class GameController : MonoBehaviour
         XElement levelBackground = levelXML.Element("levelBackground");
         return Resources.Load<Sprite>(string.Format("Backgrounds/{0}",
                                                         levelBackground.Value.Substring(0, levelBackground.Value.LastIndexOf('.'))));
+    }
+
+    private Sprite LoadEnemySprite(XElement levelXML)
+    {
+        XElement enemySprite = levelXML.Element("enemySprite");
+        return Resources.Load<Sprite>(string.Format("Images/{0}", enemySprite.Value.Substring(0, enemySprite.Value.LastIndexOf('.'))));
+    }
+
+    private Sprite LoadBossSprite(XElement levelXML)
+    {
+        XElement bossSprite = levelXML.Element("bossSprite");
+        return Resources.Load<Sprite>(string.Format("Images/{0}", bossSprite.Value.Substring(0, bossSprite.Value.LastIndexOf('.'))));
     }
 
     private Texture2D LoadTextureFromResources(XElement element, string textureName)
@@ -348,13 +398,20 @@ public class GameController : MonoBehaviour
             return;
         }
 
+        currentLevel = level;
+
         enemyCount = 0;
         Background.transform.position = (Vector3.zero);
         ChasingField.transform.position = (Vector3.zero);
+        Player.transform.position = (Vector3.zero);
 
         currentPlayerlives = playerStats.HealthLevel;
         playerLifes = UIHandler.UI.AddPlayerLifes(currentPlayerlives, PlayerLife);
         selectedLevelIndex = index;
+        Debug.Log("Selected Level: " + selectedLevelIndex);
+
+        bossCooldownTime = 0;
+        bossWave = false;
 
         DestoyAllEnemies();
         DestroyAllParticles();
@@ -364,6 +421,8 @@ public class GameController : MonoBehaviour
         audioController.PlaySound(level.LevelSoundtrack);
         gameIsActive = true;
         UIHandler.UI.StartGame();
+        UIHandler.UI.SetScore(playerStats.Score);
+        Player.SetActive(true);
         StartWave();
     }
 
@@ -381,22 +440,29 @@ public class GameController : MonoBehaviour
         }
 
         Wave wave = level.NextWave();
+        UIHandler.UI.SetWaveText(wave.WaveName);
+
         if (wave is BossWave)
         {
             BossWave bossWave = wave as BossWave;
+            UIHandler.UI.OpenBossUI();
+            UIHandler.UI.SetupBossHealthSlider(level.LevelBoss.Health, level.LevelBoss.Name);
             audioController.StopSound(level.LevelSoundtrack);
             audioController.PlaySound(bossWave.BossSoundtrack);
+            this.bossWave = true;
         }
 
-        UIHandler.UI.SetWaveText(wave.WaveName);
-        ReadSpawnImage(wave.WavePicture);
+        ReadSpawnImage(wave.WavePicture, level.EnemySprite, level.LevelBoss);
     }
 
     public void LevelCompleted()
     {
-        Level level = levels[selectedLevelIndex];
         int nextLevel = selectedLevelIndex + 1;
-        levels[nextLevel].Playable = true;
+        if (nextLevel < levels.Count)
+        {
+            levels[nextLevel].Playable = true;
+        }
+
         audioController.StopAllSounds();
         UIHandler.UI.GameUI.SetActive(false);
         gameIsActive = false;
@@ -407,7 +473,7 @@ public class GameController : MonoBehaviour
     {
         if (UIHandler.UI.GameUI.activeSelf)
         {
-            Debug.Log("Restarting Level");
+            Debug.Log("Restarting Level " + selectedLevelIndex);
             StartLevel(selectedLevelIndex);
         }
     }
@@ -438,10 +504,23 @@ public class GameController : MonoBehaviour
             Destroy(enemy);
         }
     }
+    
+    public void OnProjectileHitPlayer(GameObject projectile)
+    {
+        ReducePlayerLifes(1);
+        Destroy(projectile);
+    }
 
     public void OnPlayerHit(Collider2D collision)
     {
         ReducePlayerLifes(1);
+
+        if (collision.GetComponent<EnemyController>().IsBoss)
+        {
+            OnPlayerDeath();
+            return;
+        }
+
         DestroyEnemy(collision.gameObject);
     }
 
@@ -460,26 +539,51 @@ public class GameController : MonoBehaviour
         ShakeCamera(3.5f, .1f);
         EC.Health -= 10 * playerStats.DamageLevel;
 
+        if (EC.IsBoss)
+        {
+            UIHandler.UI.ChangeBossHealthSlider((int)EC.Health);
+        }
+
         if (EC.Health <= 0)
         {
+            if (EC.IsBoss)
+            {
+                AddScore(300);
+            }
+            else
+            {
+                AddScore(20);
+            }
             DestroyEnemy(collision.gameObject);
-            AddScore(20);
         }
 
         Destroy(projectile);
     }
 
-    public void OnProjectileSpawn(Vector2 pos, GameObject projectileToSpawn, int projectileSpeed)
+    public void OnProjectileSpawn(Vector2 pos, GameObject projectileToSpawn, int projectileSpeed, bool isBoss)
     {
-        if (cooldownTime > 0)
+        if (!isBoss)
         {
-            return;
+            if (cooldownTime > 0)
+            {
+                return;
+            }
+            cooldownTime = 0.5f;
+        }
+        else
+        {
+            if (bossCooldownTime > 0)
+            {
+                return;
+            }
+            projectileSpeed = (int)currentLevel.LevelBoss.ProjectileSpeed;
+            bossCooldownTime = 2.5f;
         }
 
         GameObject projectileObject = Instantiate(projectileToSpawn);
         audioController.PlaySound("Shooting sound");
-        projectileObject.GetComponent<ProjectileController>().SetProjectileSpeed(projectileSpeed, pos);
-        cooldownTime = 0.5f;
+        projectileObject.GetComponent<ProjectileController>().SetProjectile(projectileSpeed, pos, isBoss,
+            isBoss ? currentLevel.BossProjectileSprite : currentLevel.PlayerProjectileSprite);
     }
 
     public void OnEnemyHitBorder(GameObject enemy)
@@ -519,16 +623,5 @@ public class GameController : MonoBehaviour
         {
             StartWave();
         }
-    }
-
-    private IEnumerator WaitAndDestroy(float time, GameObject objectToDestroy)
-    {
-        yield return new WaitForSeconds(time);
-        Destroy(objectToDestroy);
-    }
-
-    public void Upgrade()
-    {
-
     }
 }

@@ -2,16 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum BossType
-{
-    shooting,
-    spawning
-}
-
-[System.Serializable]
 public class Boss
 {
     public string Name;
-    public Sprite sprite;
-    public BossType Type;
+    public Sprite Sprite;
+    public float Cooldown;
+    public int Health;
+    public float ProjectileSpeed;
+
+    public Boss(string name, Sprite sprite, float cooldown, int health, float speed)
+    {
+        Name = name;
+        Sprite = sprite;
+        Cooldown = cooldown;
+        Health = health;
+        ProjectileSpeed = speed;
+    }
 }

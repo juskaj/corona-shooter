@@ -22,7 +22,7 @@ public class UIHandler : MonoBehaviour
         scoreText = ScoreTextGameObject.GetComponent<TMP_Text>();
         gameOverText = GameOverTextGameObject.GetComponent<TMP_Text>();
         waveText = WaveTextGameObject.GetComponent<TMP_Text>();
-        scoreText.text = "Score: 0";
+        scoreText.text = "0";
         OpenMainMenuTitleUI();
     }
 
@@ -31,6 +31,9 @@ public class UIHandler : MonoBehaviour
     public GameObject TitleUI;
     public GameObject PauseUI;
     public GameObject UpgradesUI;
+    public GameObject BossUI;
+    public GameObject BossHealthSlider;
+    public GameObject BossName;
 
     public GameObject HealthUpgrade;
     public GameObject SpeedUpgrade;
@@ -63,6 +66,8 @@ public class UIHandler : MonoBehaviour
         GameUI.SetActive(false);
         LevelSelectorUI.SetActive(false);
         UpgradesUI.SetActive(true);
+        BossUI.SetActive(false);
+        UpdateScore();
     }
 
     public void OpenPauseUI()
@@ -83,6 +88,12 @@ public class UIHandler : MonoBehaviour
         PauseUI.SetActive(false);
         TitleUI.SetActive(false);
         UpgradesUI.SetActive(false);
+        BossUI.SetActive(false);
+    }
+
+    public void OpenBossUI()
+    {
+        BossUI.SetActive(true);
     }
 
     public void OpenMainMenuTitleUI()
@@ -93,6 +104,7 @@ public class UIHandler : MonoBehaviour
         GameUI.SetActive(false);
         LevelSelectorUI.SetActive(false);
         UpgradesUI.SetActive(false);
+        BossUI.SetActive(false);
     }
 
     void OnLevelSelectorClick(int index)
@@ -117,6 +129,7 @@ public class UIHandler : MonoBehaviour
         GameUI.SetActive(true);
         GameOverTextGameObject.SetActive(false);
         UpgradesUI.SetActive(false);
+        BossUI.SetActive(false);
     }
 
     public void SetGameOverScreen(int score)
@@ -125,9 +138,20 @@ public class UIHandler : MonoBehaviour
         GameOverTextGameObject.SetActive(true);
     }
 
+    public void ChangeBossHealthSlider(int amount)
+    {
+        BossHealthSlider.GetComponent<Slider>().value = amount;
+    }
+    public void SetupBossHealthSlider(int maxHealth, string name)
+    {
+        BossHealthSlider.GetComponent<Slider>().maxValue = maxHealth;
+        BossHealthSlider.GetComponent<Slider>().value = maxHealth;
+        BossName.GetComponent<TMP_Text>().text = name;
+    }
+
     public void SetScore(int score)
     {
-        scoreText.text = string.Format("Score: {0}", score.ToString());
+        scoreText.text = string.Format("{0}", score.ToString());
     }
 
     public void SetWaveText(string waveText)
@@ -165,57 +189,32 @@ public class UIHandler : MonoBehaviour
         CooldownImage.fillAmount = currentCooldown / maxCooldown;
     }
 
+    private void UpdateScore()
+    {
+        UpgradesUI.transform.GetChild(0).GetChild(3).GetComponent<TMP_Text>().text = string.Format("{0}", GameController.GM.playerStats.Score);
+    }
+
     public void UpgradeCooldown()
     {
-        int upgradeCost = (int)Mathf.Pow(GameController.GM.playerStats.CooldownLevel, 2f) * 100;
-
-        if (GameController.GM.playerStats.Score >= upgradeCost)
-        {
-            GameController.GM.playerStats.CooldownLevel++;
-            GameController.GM.playerStats.Score -= upgradeCost;
-            CooldownUpgrade.transform.GetChild(3).GetComponent<TMP_Text>().text = string.Format("Cost: {0}",
-                (int)Mathf.Pow(GameController.GM.playerStats.CooldownLevel, 2f) * 100);
-        }
-
+        CooldownUpgrade.transform.GetChild(3).GetComponent<TMP_Text>().text = string.Format("Cost: {0}", Mathf.Pow(GameController.GM.playerStats.UpgradeCooldown(), 2f) * 100);
+        UpdateScore();
     }
 
     public void UpgradeSpeed()
     {
-        int upgradeCost = GameController.GM.playerStats.SpeedLevel * 100;
-
-        if (GameController.GM.playerStats.Score >= upgradeCost)
-        {
-            GameController.GM.playerStats.SpeedLevel++;
-            GameController.GM.playerStats.Score -= upgradeCost;
-
-            SpeedUpgrade.transform.GetChild(3).GetComponent<TMP_Text>().text = string.Format("Cost: {0}",
-                (int)Mathf.Pow(GameController.GM.playerStats.SpeedLevel, 2f) * 100);
-        }
+        SpeedUpgrade.transform.GetChild(3).GetComponent<TMP_Text>().text = string.Format("Cost: {0}", Mathf.Pow(GameController.GM.playerStats.UpgradeSpeed(), 2f) * 100);
+        UpdateScore();
     }
 
     public void UpgradeHealth()
     {
-        int upgradeCost = GameController.GM.playerStats.HealthLevel * 100;
-
-        if (GameController.GM.playerStats.Score >= upgradeCost)
-        {
-            GameController.GM.playerStats.HealthLevel++;
-            GameController.GM.playerStats.Score -= upgradeCost;
-            HealthUpgrade.transform.GetChild(3).GetComponent<TMP_Text>().text = string.Format("Cost: {0}",
-                (int)Mathf.Pow(GameController.GM.playerStats.HealthLevel, 2f) * 100);
-        }
+        HealthUpgrade.transform.GetChild(3).GetComponent<TMP_Text>().text = string.Format("Cost: {0}", Mathf.Pow(GameController.GM.playerStats.UpgradeHealth(), 2f) * 100);
+        UpdateScore();
     }
 
     public void UpgradeDamage()
     {
-        int upgradeCost = GameController.GM.playerStats.DamageLevel * 100;
-
-        if (GameController.GM.playerStats.Score > upgradeCost)
-        {
-            GameController.GM.playerStats.DamageLevel++;
-            GameController.GM.playerStats.Score -= upgradeCost;
-            DamageUpgrade.transform.GetChild(3).GetComponent<TMP_Text>().text = string.Format("Cost: {0}",
-                (int)Mathf.Pow(GameController.GM.playerStats.DamageLevel, 2f) * 100);
-        }
+        DamageUpgrade.transform.GetChild(3).GetComponent<TMP_Text>().text = string.Format("Cost: {0}", Mathf.Pow(GameController.GM.playerStats.UpgradeDamage(), 2f) * 100);
+        UpdateScore();
     }
 }

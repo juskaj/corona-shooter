@@ -4,6 +4,8 @@
 		<name>Level 1</name>
 		<levelBackground>background_1.png</levelBackground>
 		<sound>Level 1 Soundtrack</sound>
+		<enemySprite>EnemySprite.png</enemySprite>
+		<projectileSprite>Projectile1_0.anim</projectileSprite>
 		<wave>
 			<waveName>Wave: 1</waveName>
 			<wavePic>wave_1_1.png</wavePic>
@@ -11,45 +13,43 @@
 		<bossWave>
 			<waveName>Boss wave</waveName>
 			<wavePic>wave_1_boss.png</wavePic>
-			<bossName>Bossas1</bossName>
+			<bossName>Level 1 Boss</bossName>
 			<bossSound>Boss soundtrack</bossSound>
+			<bossSprite>Boss1Sprite.png</bossSprite>
+			<bossHealth>100</bossHealth>
+			<bossCooldown>2</bossCooldown>
+			<bossProjectileSpeed>5</bossProjectileSpeed>
+			<bossProjectileSprite>Projectile2_0.anim</bossProjectileSprite>
 		</bossWave>
 	</level>
 	<level>
 		<name>Level 2</name>
 		<levelBackground>background_2.png</levelBackground>
 		<sound>Level 1 Soundtrack</sound>
+		<enemySprite>EnemySprite.png</enemySprite>
+		<projectileSprite>Projectile1_0.anim</projectileSprite>
 		<wave>
 			<waveName>Wave: 1</waveName>
 			<wavePic>wave_2_1.png</wavePic>
 		</wave>
-		<wave>
-			<waveName>Wave: 2</waveName>
-			<wavePic>wave_2_2.png</wavePic>
-		</wave>
-		<wave>
-			<waveName>Wave: 3</waveName>
-			<wavePic>wave_2_3.png</wavePic>
-		</wave>
-		<wave>
-			<waveName>Wave: 4</waveName>
-			<wavePic>wave_2_4.png</wavePic>
-		</wave>
-		<wave>
-			<waveName>Wave: 5</waveName>
-			<wavePic>wave_2_5.png</wavePic>
-		</wave>
 		<bossWave>
 			<waveName>Boss wave</waveName>
 			<wavePic>wave_2_boss.png</wavePic>
-			<bossName>Bossas1</bossName>
+			<bossName>Level 2 Boss</bossName>
 			<bossSound>Boss soundtrack</bossSound>
+			<bossSprite>BossSprite2.png</bossSprite>
+			<bossHealth>300</bossHealth>
+			<bossCooldown>3</bossCooldown>
+			<bossProjectileSpeed>4</bossProjectileSpeed>
+			<bossProjectileSprite>Projectile2_0.anim</bossProjectileSprite>
 		</bossWave>
 	</level>
 	<level>
 		<name>Level 3</name>
 		<levelBackground>background_3.png</levelBackground>
 		<sound>Level 1 Soundtrack</sound>
+		<enemySprite>EnemySprite.png</enemySprite>
+		<projectileSprite>Projectile1_0.anim</projectileSprite>
 		<wave>
 			<waveName>Wave: 1</waveName>
 			<wavePic>wave_3_1.png</wavePic>
@@ -65,8 +65,13 @@
 		<bossWave>
 			<waveName>Boss wave</waveName>
 			<wavePic>wave_3_boss.png</wavePic>
-			<bossName>Bossas1</bossName>
+			<bossName>Level 3 Boss</bossName>
 			<bossSound>Boss soundtrack</bossSound>
+			<bossSprite>BossSprite3.png</bossSprite>
+			<bossHealth>500</bossHealth>
+			<bossCooldown>4</bossCooldown>
+			<bossProjectileSpeed>5</bossProjectileSpeed>
+			<bossProjectileSprite>Projectile2_0.anim</bossProjectileSprite>
 		</bossWave>
 	</level>
 </levels>

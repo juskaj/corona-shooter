@@ -155,6 +155,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Health: 0
+  IsBoss: 0
+  Projectile: {fileID: 6981599382156433473, guid: 30049512d2df22e4fb32f137affa8e1b, type: 3}
 --- !u!50 &3123439885470527218
 Rigidbody2D:
   serializedVersion: 4

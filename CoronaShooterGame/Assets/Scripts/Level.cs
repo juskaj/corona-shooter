@@ -9,13 +9,19 @@ public class Level
     public List<Wave> Waves;
     public BossWave BossWave;
     public Sprite BackgroundSprite;
+    public Sprite EnemySprite;
     public string LevelSoundtrack;
     public bool Playable;
     public int highScore;
+    public Boss LevelBoss;
+    public RuntimeAnimatorController PlayerProjectileSprite;
+    public RuntimeAnimatorController BossProjectileSprite;
 
     private int currentWave;
 
-    public Level(string name, List<Wave> waves, BossWave bossWave, Sprite backgroundSprite, string soundTrackName, bool playable)
+    public Level(string name, List<Wave> waves, BossWave bossWave, Sprite backgroundSprite,
+        string soundTrackName, bool playable, Sprite enemySprite, Boss levelBoss,
+        RuntimeAnimatorController playerProjectileSprite, RuntimeAnimatorController bossProjectileSprite)
     {
         Name = name;
         Waves = waves;
@@ -25,6 +31,10 @@ public class Level
         currentWave = 0;
         highScore = 0;
         Playable = playable;
+        EnemySprite = enemySprite;
+        LevelBoss = levelBoss;
+        PlayerProjectileSprite = playerProjectileSprite;
+        BossProjectileSprite = bossProjectileSprite;
     }
 
     public void ResetWaves()

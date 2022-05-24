@@ -28,7 +28,7 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            GameController.GM.OnProjectileSpawn(transform.position, projectile, projectileSpeed);
+            GameController.GM.OnProjectileSpawn(transform.position, projectile, projectileSpeed, false);
         }
     }
 
@@ -41,6 +41,12 @@ public class PlayerController : MonoBehaviour
 
         float hozirontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
+
+        if (GameController.GM.bossWave)
+        {
+            vertical = 0;
+        }
+
         Vector2 direction = new Vector2(hozirontal, vertical);
         direction.Normalize();
 
